@@ -1,7 +1,3 @@
-/**
- * Type definitions for the chat application
- */
-
 export interface Message {
   id: string;
   sender: 'user' | 'assistant';
@@ -31,9 +27,6 @@ export interface ApiError {
   status: number;
 }
 
-/**
- * Raw message from API (uses snake_case and string dates)
- */
 export interface ApiMessage {
   id: string;
   conversation_id: string;
@@ -42,9 +35,6 @@ export interface ApiMessage {
   created_at: string;
 }
 
-/**
- * Conversation history response from API
- */
 export interface ConversationHistoryResponse {
   conversation: {
     id: string;

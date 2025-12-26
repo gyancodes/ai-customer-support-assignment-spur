@@ -6,10 +6,7 @@ interface ChatInputProps {
   maxLength?: number;
 }
 
-/**
- * Chat input component
- * Text input with send button and Enter key support
- */
+
 export function ChatInput({ onSend, disabled, maxLength = 2000 }: ChatInputProps) {
   const [message, setMessage] = useState('');
 

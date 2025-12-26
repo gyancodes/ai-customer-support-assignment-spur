@@ -1,7 +1,4 @@
-/**
- * Typing indicator component
- * Shows animated dots while waiting for AI response
- */
+
 export function TypingIndicator() {
   return (
     <div className="flex gap-4 w-full animate-message-in">

@@ -4,10 +4,7 @@ interface ChatMessageProps {
   message: Message;
 }
 
-/**
- * Individual chat message component
- * Displays user and assistant messages with different styling
- */
+
 export function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.sender === 'user';
   

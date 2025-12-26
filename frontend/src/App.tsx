@@ -2,9 +2,7 @@ import { ChatWindow } from './components/ChatWindow';
 import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
 
-/**
- * Root application component
- */
+
 function App() {
   return (
     <ThemeProvider>

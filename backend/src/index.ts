@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { config, validateConfig } from './config/index.js';
 import { testConnection, closePool } from './db/pool.js';
@@ -9,17 +9,37 @@ import {
   requestLogger,
 } from './middleware/error.middleware.js';
 
-// Validate configuration before starting
 validateConfig();
 
 const app = express();
 
-// Middleware
 app.use(cors());
-app.use(express.json({ limit: '1mb' }));
+
+app.use(express.json({ 
+  limit: '100kb',
+  strict: true,
+}));
+
+app.use((err: Error, _req: Request, res: Response, next: NextFunction) => {
+  if (err instanceof SyntaxError && 'body' in err) {
+    res.status(400).json({
+      error: 'Invalid JSON in request body',
+      status: 400,
+    });
+    return;
+  }
+  if (err.message?.includes('request entity too large')) {
+    res.status(413).json({
+      error: 'Request body too large. Maximum size is 100KB.',
+      status: 413,
+    });
+    return;
+  }
+  next(err);
+});
+
 app.use(requestLogger);
 
-// Health check endpoint
 app.get('/health', (_req, res) => {
   res.json({
     status: 'ok',
@@ -28,14 +48,11 @@ app.get('/health', (_req, res) => {
   });
 });
 
-// API Routes
 app.use('/chat', chatRoutes);
 
-// Error handling
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-// Graceful shutdown
 async function shutdown(signal: string): Promise<void> {
   console.log(`\n${signal} received. Shutting down gracefully...`);
   await closePool();
@@ -45,10 +62,8 @@ async function shutdown(signal: string): Promise<void> {
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
 
-// Start server
 async function start(): Promise<void> {
   try {
-    // Test database connection
     const dbConnected = await testConnection();
     if (!dbConnected) {
       console.error('Failed to connect to database. Exiting...');

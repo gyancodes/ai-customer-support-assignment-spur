@@ -8,9 +8,6 @@ import { useTheme } from '../context/ThemeContext';
 
 const SESSION_STORAGE_KEY = 'spur_chat_session_id';
 
-/**
- * Get the welcome message
- */
 function getWelcomeMessage(): Message {
   return {
     id: 'welcome',
@@ -20,10 +17,6 @@ function getWelcomeMessage(): Message {
   };
 }
 
-/**
- * Main chat window component
- * Manages chat state, handles message sending, and renders the chat UI
- */
 export function ChatWindow() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -35,7 +28,6 @@ export function ChatWindow() {
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const { theme, toggleTheme } = useTheme();
 
-  // Auto-scroll to latest message
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
@@ -44,7 +36,6 @@ export function ChatWindow() {
     scrollToBottom();
   }, [messages, isLoading, scrollToBottom]);
 
-  // Load session from localStorage and fetch history on mount
   useEffect(() => {
     async function loadConversationHistory() {
       const savedSessionId = localStorage.getItem(SESSION_STORAGE_KEY);
@@ -54,11 +45,9 @@ export function ChatWindow() {
           const history = await getConversationHistory(savedSessionId);
           
           if (history.length > 0) {
-            // Session exists and has messages
             setSessionId(savedSessionId);
             setMessages(history);
           } else {
-            // Session not found or empty, clear and show welcome
             localStorage.removeItem(SESSION_STORAGE_KEY);
             setMessages([getWelcomeMessage()]);
           }
@@ -68,7 +57,6 @@ export function ChatWindow() {
           setMessages([getWelcomeMessage()]);
         }
       } else {
-        // No saved session, show welcome message
         setMessages([getWelcomeMessage()]);
       }
       
@@ -78,7 +66,6 @@ export function ChatWindow() {
     loadConversationHistory();
   }, []);
 
-  // Save sessionId to localStorage whenever it changes
   useEffect(() => {
     if (sessionId) {
       localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
@@ -86,10 +73,8 @@ export function ChatWindow() {
   }, [sessionId]);
 
   const handleSendMessage = async (text: string) => {
-    // Clear any previous errors
     setError(null);
 
-    // Create user message
     const userMessage: Message = {
       id: `user-${Date.now()}`,
       sender: 'user',
@@ -97,23 +82,19 @@ export function ChatWindow() {
       timestamp: new Date(),
     };
 
-    // Add user message to UI immediately
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
 
     try {
-      // Send to API
       const response = await sendMessageApi({
         message: text,
         sessionId: sessionId || undefined,
       });
 
-      // Update session ID
       if (!sessionId) {
         setSessionId(response.sessionId);
       }
 
-      // Add AI response
       const assistantMessage: Message = {
         id: `assistant-${Date.now()}`,
         sender: 'assistant',
@@ -142,10 +123,8 @@ export function ChatWindow() {
   };
 
   const handleNewChat = () => {
-    // Clear localStorage
     localStorage.removeItem(SESSION_STORAGE_KEY);
     
-    // Reset state
     setMessages([getWelcomeMessage()]);
     setSessionId(null);
     setError(null);

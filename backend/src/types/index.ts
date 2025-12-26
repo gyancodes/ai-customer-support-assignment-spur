@@ -1,7 +1,3 @@
-/**
- * Core type definitions for the chat application
- */
-
 export interface Conversation {
   id: string;
   created_at: Date;

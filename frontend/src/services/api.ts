@@ -2,9 +2,6 @@ import { SendMessageRequest, SendMessageResponse, ApiError, ConversationHistoryR
 
 const API_BASE_URL = '/chat';
 
-/**
- * Custom error class for API errors
- */
 export class ChatApiError extends Error {
   constructor(
     public statusCode: number,
@@ -15,12 +12,6 @@ export class ChatApiError extends Error {
   }
 }
 
-/**
- * Send a message to the chat API
- * @param request - The message and optional session ID
- * @returns The AI response and session ID
- * @throws ChatApiError if the request fails
- */
 export async function sendMessage(
   request: SendMessageRequest
 ): Promise<SendMessageResponse> {
@@ -49,7 +40,6 @@ export async function sendMessage(
       throw error;
     }
 
-    // Handle network errors
     if (error instanceof TypeError && error.message.includes('fetch')) {
       throw new ChatApiError(
         0,
@@ -61,12 +51,6 @@ export async function sendMessage(
   }
 }
 
-/**
- * Get conversation history by session ID
- * @param sessionId - The conversation/session ID
- * @returns Array of messages in the conversation
- * @throws ChatApiError if the request fails
- */
 export async function getConversationHistory(
   sessionId: string
 ): Promise<Message[]> {
@@ -75,7 +59,6 @@ export async function getConversationHistory(
 
     if (!response.ok) {
       if (response.status === 404) {
-        // Conversation not found, return empty array
         return [];
       }
       const data = await response.json();
@@ -88,7 +71,6 @@ export async function getConversationHistory(
 
     const data = await response.json() as ConversationHistoryResponse;
     
-    // Convert API messages to frontend Message format
     return data.messages.map((msg) => ({
       id: msg.id,
       sender: msg.sender,
@@ -100,15 +82,11 @@ export async function getConversationHistory(
       throw error;
     }
 
-    // Handle network errors silently for history loading
     console.error('Failed to load conversation history:', error);
     return [];
   }
 }
 
-/**
- * Check if the API is healthy
- */
 export async function checkHealth(): Promise<boolean> {
   try {
     const response = await fetch('/health');

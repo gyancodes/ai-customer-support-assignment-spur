@@ -2,21 +2,15 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-/**
- * Application configuration loaded from environment variables
- * All sensitive values come from .env file
- */
 export const config = {
   server: {
     port: parseInt(process.env.PORT || '3001', 10),
     nodeEnv: process.env.NODE_ENV || 'development',
   },
   database: {
-    // Neon DB uses a connection string URL
     url: process.env.DATABASE_URL || '',
   },
   llm: {
-    // Groq API configuration
     apiKey: process.env.GROQ_API_KEY || '',
     model: process.env.LLM_MODEL || 'llama-3.3-70b-versatile',
     maxTokens: parseInt(process.env.LLM_MAX_TOKENS || '500', 10),
@@ -28,9 +22,6 @@ export const config = {
   },
 } as const;
 
-/**
- * Validate that required environment variables are set
- */
 export function validateConfig(): void {
   const errors: string[] = [];
 

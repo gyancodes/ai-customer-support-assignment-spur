@@ -2,28 +2,46 @@ import { Request, Response, NextFunction } from 'express';
 import { chatService } from '../services/chat.service.js';
 import { ChatRequest, AppError } from '../types/index.js';
 
-/**
- * Chat Controller - Handles HTTP requests for chat operations
- */
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function isValidUUID(str: string): boolean {
+  return UUID_REGEX.test(str);
+}
+
 export class ChatController {
-  /**
-   * POST /chat/message
-   * Process a new message and return AI response
-   */
   async sendMessage(
     req: Request<{}, {}, ChatRequest>,
     res: Response,
     next: NextFunction
   ): Promise<void> {
     try {
-      const { message, sessionId } = req.body;
+      const { message, sessionId } = req.body ?? {};
 
-      // Input validation
+      if (!req.body || typeof req.body !== 'object') {
+        throw new AppError(400, 'Request body is required');
+      }
+
+      if (message === undefined || message === null) {
+        throw new AppError(400, 'Message is required');
+      }
+
       if (typeof message !== 'string') {
         throw new AppError(400, 'Message must be a string');
       }
 
-      const result = await chatService.processMessage(message, sessionId);
+      if (sessionId !== undefined && sessionId !== null) {
+        if (typeof sessionId !== 'string') {
+          throw new AppError(400, 'Session ID must be a string');
+        }
+        if (sessionId.trim() && !isValidUUID(sessionId.trim())) {
+          throw new AppError(400, 'Invalid session ID format');
+        }
+      }
+
+      const result = await chatService.processMessage(
+        message, 
+        sessionId?.trim() || undefined
+      );
 
       res.json({
         reply: result.reply,
@@ -34,10 +52,6 @@ export class ChatController {
     }
   }
 
-  /**
-   * GET /chat/:sessionId
-   * Retrieve conversation history
-   */
   async getConversation(
     req: Request<{ sessionId: string }>,
     res: Response,
@@ -46,11 +60,20 @@ export class ChatController {
     try {
       const { sessionId } = req.params;
 
-      if (!sessionId) {
+      if (!sessionId || typeof sessionId !== 'string') {
         throw new AppError(400, 'Session ID is required');
       }
 
-      const result = await chatService.getConversation(sessionId);
+      const trimmedSessionId = sessionId.trim();
+      if (!trimmedSessionId) {
+        throw new AppError(400, 'Session ID cannot be empty');
+      }
+
+      if (!isValidUUID(trimmedSessionId)) {
+        throw new AppError(400, 'Invalid session ID format');
+      }
+
+      const result = await chatService.getConversation(trimmedSessionId);
 
       if (!result) {
         throw new AppError(404, 'Conversation not found');
@@ -62,10 +85,6 @@ export class ChatController {
     }
   }
 
-  /**
-   * GET /health
-   * Health check endpoint
-   */
   async healthCheck(
     _req: Request,
     res: Response,
@@ -82,5 +101,4 @@ export class ChatController {
   }
 }
 
-// Export singleton instance
 export const chatController = new ChatController();

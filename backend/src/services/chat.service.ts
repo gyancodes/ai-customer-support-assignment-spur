@@ -4,20 +4,11 @@ import { llmService } from './llm.service.js';
 import { config } from '../config/index.js';
 import { Message, Conversation, LLMMessage, AppError } from '../types/index.js';
 
-/**
- * Chat Service - Handles all chat-related business logic
- * Manages conversations, messages, and LLM interactions
- */
 class ChatService {
-  /**
-   * Process a user message and generate an AI response
-   * Creates a new conversation if sessionId is not provided
-   */
   async processMessage(
     message: string,
     sessionId?: string
   ): Promise<{ reply: string; sessionId: string }> {
-    // Validate message
     const trimmedMessage = message.trim();
     if (!trimmedMessage) {
       throw new AppError(400, 'Message cannot be empty');
@@ -30,38 +21,30 @@ class ChatService {
       );
     }
 
-    // Get or create conversation
     let conversationId: string;
     if (sessionId) {
-      // Validate existing session
       const exists = await this.conversationExists(sessionId);
       if (!exists) {
         throw new AppError(404, 'Conversation not found. Please start a new chat.');
       }
       conversationId = sessionId;
     } else {
-      // Create new conversation
       conversationId = await this.createConversation();
     }
 
-    // Save user message
     await this.saveMessage(conversationId, 'user', trimmedMessage);
 
-    // Get conversation history for context
     const history = await this.getConversationHistory(conversationId);
 
-    // Convert to LLM message format (exclude the message we just saved)
     const llmHistory: LLMMessage[] = history
-      .slice(0, -1) // Exclude the last message (the one we just saved)
+      .slice(0, -1)
       .map((msg) => ({
         role: msg.sender as 'user' | 'assistant',
         content: msg.text,
       }));
 
-    // Generate AI response
     const reply = await llmService.generateResponse(llmHistory, trimmedMessage);
 
-    // Save AI response
     await this.saveMessage(conversationId, 'assistant', reply);
 
     return {
@@ -70,9 +53,6 @@ class ChatService {
     };
   }
 
-  /**
-   * Create a new conversation
-   */
   private async createConversation(): Promise<string> {
     const id = uuidv4();
     await pool.query(
@@ -82,9 +62,6 @@ class ChatService {
     return id;
   }
 
-  /**
-   * Check if a conversation exists
-   */
   private async conversationExists(id: string): Promise<boolean> {
     const result = await pool.query(
       'SELECT 1 FROM conversations WHERE id = $1',
@@ -93,9 +70,6 @@ class ChatService {
     return result.rowCount !== null && result.rowCount > 0;
   }
 
-  /**
-   * Save a message to the database
-   */
   private async saveMessage(
     conversationId: string,
     sender: 'user' | 'assistant',
@@ -111,9 +85,6 @@ class ChatService {
     return result.rows[0];
   }
 
-  /**
-   * Get conversation history, limited to recent messages for context
-   */
   private async getConversationHistory(
     conversationId: string
   ): Promise<Message[]> {
@@ -128,9 +99,6 @@ class ChatService {
     return result.rows;
   }
 
-  /**
-   * Get a conversation by ID (for API endpoints)
-   */
   async getConversation(
     conversationId: string
   ): Promise<{ conversation: Conversation; messages: Message[] } | null> {
@@ -157,5 +125,4 @@ class ChatService {
   }
 }
 
-// Export singleton instance
 export const chatService = new ChatService();

@@ -1,57 +1,34 @@
-# AI Customer Support Chat
+# Spur AI Customer Support Chat
 
-A production-quality AI-powered customer support chat application. This application demonstrates a complete full-stack implementation with a React frontend, Express backend, Neon PostgreSQL database, and Groq LLM integration.
+A production-quality AI-powered customer support chat application built with React, Express, Neon PostgreSQL, and Groq LLM.
 
-## 🌟 Features
+## Table of Contents
 
-- **Real-time Chat**: Smooth, responsive chat interface with typing indicators
-- **AI-Powered Responses**: Groq LLM integration (Llama 3.3) with customizable system prompts
-- **Conversation Persistence**: All messages stored in Neon PostgreSQL (serverless)
-- **Robust Error Handling**: Graceful handling of API failures, timeouts, and rate limits
-- **Clean Architecture**: Clear separation of concerns with controllers, services, and routes
-- **Type Safety**: Full TypeScript implementation on both frontend and backend
+- [Quick Start](#quick-start)
+- [Environment Setup](#environment-setup)
+- [Database Setup](#database-setup)
+- [Architecture Overview](#architecture-overview)
+- [LLM Integration](#llm-integration)
+- [API Reference](#api-reference)
+- [Trade-offs and Future Improvements](#trade-offs-and-future-improvements)
 
-## 📁 Project Structure
+---
 
-```
-.
-├── backend/
-│   ├── src/
-│   │   ├── config/           # Environment configuration
-│   │   ├── controllers/      # Request handlers
-│   │   ├── db/               # Database setup & migrations
-│   │   ├── middleware/       # Error handling middleware
-│   │   ├── routes/           # API route definitions
-│   │   ├── services/         # Business logic (LLM, chat)
-│   │   ├── types/            # TypeScript type definitions
-│   │   └── index.ts          # Application entry point
-│   ├── package.json
-│   └── tsconfig.json
-├── frontend/
-│   ├── src/
-│   │   ├── components/       # React components
-│   │   ├── services/         # API client
-│   │   ├── types/            # TypeScript types
-│   │   ├── App.tsx           # Root component
-│   │   └── main.tsx          # Entry point
-│   ├── index.html
-│   ├── package.json
-│   └── vite.config.ts
-├── .env.example
-└── README.md
-```
-
-## 🚀 Getting Started
+## Quick Start
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - Neon Database account (https://neon.tech)
 - Groq API key (https://console.groq.com)
 
-### 1. Clone and Install
+### Installation
 
 ```bash
+# Clone the repository
+git clone <repository-url>
+cd ai-customer-support-assignment-spur
+
 # Install backend dependencies
 cd backend
 npm install
@@ -61,60 +38,184 @@ cd ../frontend
 npm install
 ```
 
-### 2. Configure Environment
+### Running Locally
 
 ```bash
-# Copy environment template
-cp .env.example backend/.env
-
-# Edit .env with your values:
-# - GROQ_API_KEY (required) - Get from Groq Console
-# - DATABASE_URL (required) - Get from Neon Dashboard
-```
-
-### 3. Setup Database
-
-```bash
-# Create a new project in Neon Dashboard
-# Copy the connection string to DATABASE_URL in .env
-
-# Run migrations
-cd backend
-npm run db:migrate
-```
-
-### 4. Start Development Servers
-
-```bash
-# Terminal 1: Start backend
+# Terminal 1: Start backend (port 3001)
 cd backend
 npm run dev
 
-# Terminal 2: Start frontend
+# Terminal 2: Start frontend (port 5173)
 cd frontend
 npm run dev
 ```
 
-The frontend will be available at `http://localhost:5173`
+Open http://localhost:5173 in your browser.
 
-## 📡 API Documentation
+---
+
+## Environment Setup
+
+Create a `.env` file in the `backend/` directory:
+
+```bash
+cp backend/.env.example backend/.env
+```
+
+Required environment variables:
+
+| Variable | Description |
+|----------|-------------|
+| DATABASE_URL | Neon PostgreSQL connection string |
+| GROQ_API_KEY | API key from Groq Console |
+
+Optional variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| PORT | 3001 | Backend server port |
+| NODE_ENV | development | Environment mode |
+| LLM_MODEL | llama-3.3-70b-versatile | Groq model |
+| LLM_MAX_TOKENS | 500 | Max response tokens |
+| LLM_TEMPERATURE | 0.7 | Response creativity (0-1) |
+| MAX_MESSAGE_LENGTH | 2000 | Max user message length |
+| MAX_HISTORY_MESSAGES | 10 | Context messages for LLM |
+
+---
+
+## Database Setup
+
+### 1. Create Neon Database
+
+1. Go to https://neon.tech and create a free account
+2. Create a new project
+3. Copy the connection string from the dashboard
+4. Add it to your `.env` file as `DATABASE_URL`
+
+### 2. Run Migrations
+
+```bash
+cd backend
+npm run db:migrate
+```
+
+This creates two tables:
+
+**conversations**
+| Column | Type | Description |
+|--------|------|-------------|
+| id | UUID | Primary key |
+| created_at | TIMESTAMPTZ | Creation timestamp |
+
+**messages**
+| Column | Type | Description |
+|--------|------|-------------|
+| id | UUID | Primary key |
+| conversation_id | UUID | Foreign key |
+| sender | VARCHAR | 'user' or 'assistant' |
+| text | TEXT | Message content |
+| created_at | TIMESTAMPTZ | Timestamp |
+
+---
+
+## Architecture Overview
+
+### Project Structure
+
+```
+backend/
+  src/
+    config/        - Environment configuration and validation
+    controllers/   - HTTP request handlers
+    db/            - Database connection pool and migrations
+    middleware/    - Error handling middleware
+    routes/        - Express route definitions
+    services/      - Business logic (ChatService, LLMService)
+    types/         - TypeScript type definitions
+    index.ts       - Application entry point
+
+frontend/
+  src/
+    components/    - React UI components
+    context/       - Theme context for dark/light mode
+    services/      - API client functions
+    types/         - TypeScript types
+    App.tsx        - Root component
+```
+
+### Backend Layers
+
+1. **Routes** - Define API endpoints and map to controllers
+2. **Controllers** - Handle HTTP requests, validate input, call services
+3. **Services** - Business logic, database operations, LLM calls
+4. **Middleware** - Cross-cutting concerns (error handling, logging)
+
+### Design Decisions
+
+**Layered Architecture**: Clear separation between HTTP handling (controllers) and business logic (services) makes the code testable and maintainable.
+
+**Session-based Conversations**: Using UUIDs for session tracking allows conversation persistence without requiring user authentication.
+
+**localStorage for Session Persistence**: Frontend stores sessionId in localStorage to restore conversations on page reload.
+
+**Singleton Services**: ChatService and LLMService are singletons to reuse database connections and API clients.
+
+**Graceful Error Handling**: All errors are caught and transformed into user-friendly messages. The backend never crashes on bad input.
+
+---
+
+## LLM Integration
+
+### Provider
+
+**Groq** - Chosen for fast inference speed and free tier availability. Uses the `llama-3.3-70b-versatile` model by default.
+
+### Prompting Strategy
+
+The system prompt defines Spur as a fashion/lifestyle e-commerce company. It includes:
+
+- Company description and personality guidelines
+- Complete knowledge base (shipping, returns, support hours, payments, promotions)
+- Product categories and sizing help
+- Order management information
+- Response guidelines for the AI
+
+The prompt is structured with clear sections using markdown headers for better LLM comprehension.
+
+### Conversation Context
+
+- Last 10 messages are sent as context (configurable via MAX_HISTORY_MESSAGES)
+- Messages are stored in PostgreSQL for persistence
+- Full conversation history is loaded when a session is resumed
+
+### Error Handling
+
+All LLM failures are caught and mapped to user-friendly messages:
+- Rate limits (429) - "AI service is temporarily busy"
+- Timeouts - "AI response timed out"
+- Auth errors - "Please contact support"
+- Network errors - "Unable to reach AI service"
+
+---
+
+## API Reference
 
 ### POST /chat/message
 
 Send a message and receive an AI response.
 
-**Request:**
+Request:
 ```json
 {
-  "message": "What are your shipping options?",
+  "message": "What is your return policy?",
   "sessionId": "optional-uuid"
 }
 ```
 
-**Response:**
+Response:
 ```json
 {
-  "reply": "We offer three shipping options...",
+  "reply": "We offer a 30-day return window...",
   "sessionId": "uuid"
 }
 ```
@@ -123,22 +224,14 @@ Send a message and receive an AI response.
 
 Retrieve conversation history.
 
-**Response:**
+Response:
 ```json
 {
   "conversation": {
     "id": "uuid",
     "created_at": "2024-01-01T00:00:00Z"
   },
-  "messages": [
-    {
-      "id": "uuid",
-      "conversation_id": "uuid",
-      "sender": "user",
-      "text": "Hello",
-      "created_at": "2024-01-01T00:00:00Z"
-    }
-  ]
+  "messages": [...]
 }
 ```
 
@@ -146,124 +239,28 @@ Retrieve conversation history.
 
 Health check endpoint.
 
-**Response:**
-```json
-{
-  "status": "ok",
-  "timestamp": "2024-01-01T00:00:00Z",
-  "environment": "development"
-}
-```
+---
 
-## 🗄️ Data Model
+## Trade-offs and Future Improvements
 
-### conversations
-| Column     | Type        | Description              |
-|------------|-------------|--------------------------|
-| id         | UUID        | Primary key              |
-| created_at | TIMESTAMPTZ | Creation timestamp       |
+### Current Trade-offs
 
-### messages
-| Column          | Type        | Description                    |
-|-----------------|-------------|--------------------------------|
-| id              | UUID        | Primary key                    |
-| conversation_id | UUID        | Foreign key to conversations   |
-| sender          | VARCHAR(20) | 'user' or 'assistant'          |
-| text            | TEXT        | Message content                |
-| created_at      | TIMESTAMPTZ | Creation timestamp             |
+**No Authentication**: Simplified for the assignment. In production, would add user auth and tie conversations to accounts.
 
-## 🤖 LLM Configuration
+**localStorage for Sessions**: Simple but means conversations are device-specific. Could use server-side session management.
 
-The AI assistant is configured as an e-commerce support agent with knowledge about:
+**Single LLM Provider**: Currently only supports Groq. Could abstract to support multiple providers.
 
-- **Shipping**: Standard (5-7 days, free over $50), Express (2-3 days, $9.99), Overnight ($19.99)
-- **Returns**: 30-day return policy, 5-7 day refunds
-- **Support Hours**: Live chat M-F 9AM-9PM EST, email 24-48h response
-- **Payment**: All major cards, PayPal, Apple Pay, Affirm installments
+**No Rate Limiting**: The backend doesn't implement rate limiting. Would add express-rate-limit in production.
 
-The system prompt can be customized in `backend/src/services/llm.service.ts`.
+**No Caching**: LLM responses aren't cached. Could cache common questions to reduce API calls.
 
-## 🛡️ Error Handling
+### If I Had More Time
 
-The application handles various error scenarios:
+1. **User Authentication** - Add login/signup with conversation history tied to accounts
 
-- **Empty messages**: Rejected with 400 status
-- **Long messages**: Truncated to max length (default 2000 chars)
-- **Invalid session**: Returns 404 with helpful message
-- **LLM timeouts**: Returns 504 with retry message
-- **Rate limits**: Returns 503 with wait message
-- **API key issues**: Returns 500 with contact support message
-- **Database errors**: Graceful handling with user-friendly messages
+2. **Testing** - Add unit tests for services and integration tests for API
 
-## 🔧 Configuration Options
+3. **Monitoring** - Add logging, metrics, and alerting for production
 
-| Variable            | Default                  | Description                           |
-|---------------------|--------------------------|---------------------------------------|
-| PORT                | 3001                     | Backend server port                   |
-| NODE_ENV            | development              | Environment mode                      |
-| DATABASE_URL        | -                        | Neon DB connection string (required)  |
-| GROQ_API_KEY        | -                        | Groq API key (required)               |
-| LLM_MODEL           | llama-3.3-70b-versatile  | Groq model to use                     |
-| LLM_MAX_TOKENS      | 500                      | Max tokens in response                |
-| LLM_TEMPERATURE     | 0.7                      | Response creativity (0-1)             |
-| MAX_MESSAGE_LENGTH  | 2000                     | Max user message length               |
-| MAX_HISTORY_MESSAGES| 10                       | Context messages sent to LLM          |
-
-## 🚢 Production Deployment
-
-### Build
-
-```bash
-# Build backend
-cd backend
-npm run build
-
-# Build frontend
-cd frontend
-npm run build
-```
-
-### Run
-
-```bash
-# Start backend
-cd backend
-NODE_ENV=production node dist/index.js
-
-# Serve frontend build from dist/ with any static server
-```
-
-### Recommended Production Setup
-
-- Use a process manager like PM2 for the backend
-- Set up PostgreSQL with proper credentials and SSL
-- Use environment variables for all secrets
-- Add rate limiting middleware
-- Enable CORS only for your domain
-- Use a reverse proxy (nginx) for the frontend
-
-## 🔄 Future Extensions
-
-The architecture supports easy extension to other channels:
-
-```typescript
-// Example: WhatsApp integration
-// backend/src/services/channels/whatsapp.service.ts
-
-import { chatService } from '../chat.service';
-
-export async function handleWhatsAppMessage(from: string, text: string) {
-  // Map WhatsApp user to session
-  const sessionId = getOrCreateSession(from);
-  
-  // Use existing chat service
-  const response = await chatService.processMessage(text, sessionId);
-  
-  // Send response via WhatsApp API
-  await sendWhatsAppMessage(from, response.reply);
-}
-```
-
-## 📄 License
-
-MIT License - feel free to use this code for your projects.
+---
