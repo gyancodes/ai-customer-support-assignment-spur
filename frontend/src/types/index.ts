@@ -30,3 +30,25 @@ export interface ApiError {
   error: string;
   status: number;
 }
+
+/**
+ * Raw message from API (uses snake_case and string dates)
+ */
+export interface ApiMessage {
+  id: string;
+  conversation_id: string;
+  sender: 'user' | 'assistant';
+  text: string;
+  created_at: string;
+}
+
+/**
+ * Conversation history response from API
+ */
+export interface ConversationHistoryResponse {
+  conversation: {
+    id: string;
+    created_at: string;
+  };
+  messages: ApiMessage[];
+}

@@ -1,4 +1,4 @@
-import { SendMessageRequest, SendMessageResponse, ApiError } from '../types';
+import { SendMessageRequest, SendMessageResponse, ApiError, ConversationHistoryResponse, Message } from '../types';
 
 const API_BASE_URL = '/chat';
 
@@ -58,6 +58,51 @@ export async function sendMessage(
     }
 
     throw new ChatApiError(500, 'An unexpected error occurred. Please try again.');
+  }
+}
+
+/**
+ * Get conversation history by session ID
+ * @param sessionId - The conversation/session ID
+ * @returns Array of messages in the conversation
+ * @throws ChatApiError if the request fails
+ */
+export async function getConversationHistory(
+  sessionId: string
+): Promise<Message[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/${sessionId}`);
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        // Conversation not found, return empty array
+        return [];
+      }
+      const data = await response.json();
+      const error = data as ApiError;
+      throw new ChatApiError(
+        error.status || response.status,
+        error.error || 'Failed to load conversation history'
+      );
+    }
+
+    const data = await response.json() as ConversationHistoryResponse;
+    
+    // Convert API messages to frontend Message format
+    return data.messages.map((msg) => ({
+      id: msg.id,
+      sender: msg.sender,
+      text: msg.text,
+      timestamp: new Date(msg.created_at),
+    }));
+  } catch (error) {
+    if (error instanceof ChatApiError) {
+      throw error;
+    }
+
+    // Handle network errors silently for history loading
+    console.error('Failed to load conversation history:', error);
+    return [];
   }
 }
 

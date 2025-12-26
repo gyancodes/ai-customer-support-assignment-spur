@@ -57,13 +57,12 @@ async function start(): Promise<void> {
 
     app.listen(config.server.port, () => {
       console.log(`
-╔═══════════════════════════════════════════════════╗
-║         AI Customer Support Chat Backend          ║
-╠═══════════════════════════════════════════════════╣
-║  🚀 Server running on port ${config.server.port.toString().padEnd(20)}  ║
-║  📊 Environment: ${config.server.nodeEnv.padEnd(28)}  ║
-║  🤖 LLM Model: ${config.llm.model.padEnd(31)}  ║
-╚═══════════════════════════════════════════════════╝
+Spur Customer Support Chat Backend
+----------------------------------------
+Port:        ${config.server.port}
+Environment: ${config.server.nodeEnv}
+LLM Model:   ${config.llm.model}
+----------------------------------------
       `);
     });
   } catch (error) {

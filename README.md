@@ -1,12 +1,12 @@
 # AI Customer Support Chat
 
-A production-quality AI-powered customer support chat application. This application demonstrates a complete full-stack implementation with a React frontend, Express backend, PostgreSQL database, and OpenAI LLM integration.
+A production-quality AI-powered customer support chat application. This application demonstrates a complete full-stack implementation with a React frontend, Express backend, Neon PostgreSQL database, and Groq LLM integration.
 
 ## 🌟 Features
 
 - **Real-time Chat**: Smooth, responsive chat interface with typing indicators
-- **AI-Powered Responses**: OpenAI GPT integration with customizable system prompts
-- **Conversation Persistence**: All messages stored in PostgreSQL
+- **AI-Powered Responses**: Groq LLM integration (Llama 3.3) with customizable system prompts
+- **Conversation Persistence**: All messages stored in Neon PostgreSQL (serverless)
 - **Robust Error Handling**: Graceful handling of API failures, timeouts, and rate limits
 - **Clean Architecture**: Clear separation of concerns with controllers, services, and routes
 - **Type Safety**: Full TypeScript implementation on both frontend and backend
@@ -46,8 +46,8 @@ A production-quality AI-powered customer support chat application. This applicat
 ### Prerequisites
 
 - Node.js 18+ 
-- PostgreSQL 14+
-- OpenAI API key
+- Neon Database account (https://neon.tech)
+- Groq API key (https://console.groq.com)
 
 ### 1. Clone and Install
 
@@ -68,15 +68,15 @@ npm install
 cp .env.example backend/.env
 
 # Edit .env with your values:
-# - OPENAI_API_KEY (required)
-# - Database credentials
+# - GROQ_API_KEY (required) - Get from Groq Console
+# - DATABASE_URL (required) - Get from Neon Dashboard
 ```
 
 ### 3. Setup Database
 
 ```bash
-# Create database
-psql -U postgres -c "CREATE DATABASE ai_chat;"
+# Create a new project in Neon Dashboard
+# Copy the connection string to DATABASE_URL in .env
 
 # Run migrations
 cd backend
@@ -197,21 +197,17 @@ The application handles various error scenarios:
 
 ## 🔧 Configuration Options
 
-| Variable            | Default         | Description                           |
-|---------------------|-----------------|---------------------------------------|
-| PORT                | 3001            | Backend server port                   |
-| NODE_ENV            | development     | Environment mode                      |
-| DB_HOST             | localhost       | PostgreSQL host                       |
-| DB_PORT             | 5432            | PostgreSQL port                       |
-| DB_NAME             | ai_chat         | Database name                         |
-| DB_USER             | postgres        | Database user                         |
-| DB_PASSWORD         | -               | Database password                     |
-| OPENAI_API_KEY      | -               | OpenAI API key (required)             |
-| LLM_MODEL           | gpt-3.5-turbo   | OpenAI model to use                   |
-| LLM_MAX_TOKENS      | 500             | Max tokens in response                |
-| LLM_TEMPERATURE     | 0.7             | Response creativity (0-1)             |
-| MAX_MESSAGE_LENGTH  | 2000            | Max user message length               |
-| MAX_HISTORY_MESSAGES| 10              | Context messages sent to LLM          |
+| Variable            | Default                  | Description                           |
+|---------------------|--------------------------|---------------------------------------|
+| PORT                | 3001                     | Backend server port                   |
+| NODE_ENV            | development              | Environment mode                      |
+| DATABASE_URL        | -                        | Neon DB connection string (required)  |
+| GROQ_API_KEY        | -                        | Groq API key (required)               |
+| LLM_MODEL           | llama-3.3-70b-versatile  | Groq model to use                     |
+| LLM_MAX_TOKENS      | 500                      | Max tokens in response                |
+| LLM_TEMPERATURE     | 0.7                      | Response creativity (0-1)             |
+| MAX_MESSAGE_LENGTH  | 2000                     | Max user message length               |
+| MAX_HISTORY_MESSAGES| 10                       | Context messages sent to LLM          |
 
 ## 🚢 Production Deployment
 

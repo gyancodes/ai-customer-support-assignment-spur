@@ -12,15 +12,13 @@ export const config = {
     nodeEnv: process.env.NODE_ENV || 'development',
   },
   database: {
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '5432', 10),
-    name: process.env.DB_NAME || 'ai_chat',
-    user: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || '',
+    // Neon DB uses a connection string URL
+    url: process.env.DATABASE_URL || '',
   },
   llm: {
-    apiKey: process.env.OPENAI_API_KEY || '',
-    model: process.env.LLM_MODEL || 'gpt-3.5-turbo',
+    // Groq API configuration
+    apiKey: process.env.GROQ_API_KEY || '',
+    model: process.env.LLM_MODEL || 'llama-3.3-70b-versatile',
     maxTokens: parseInt(process.env.LLM_MAX_TOKENS || '500', 10),
     temperature: parseFloat(process.env.LLM_TEMPERATURE || '0.7'),
   },
@@ -37,11 +35,11 @@ export function validateConfig(): void {
   const errors: string[] = [];
 
   if (!config.llm.apiKey) {
-    errors.push('OPENAI_API_KEY is required');
+    errors.push('GROQ_API_KEY is required');
   }
 
-  if (!config.database.password && config.server.nodeEnv === 'production') {
-    errors.push('DB_PASSWORD is required in production');
+  if (!config.database.url) {
+    errors.push('DATABASE_URL is required (Neon DB connection string)');
   }
 
   if (errors.length > 0) {

@@ -2,18 +2,17 @@ import { Pool } from 'pg';
 import { config } from '../config/index.js';
 
 /**
- * PostgreSQL connection pool
- * Uses environment-based configuration for connection settings
+ * PostgreSQL connection pool for Neon DB
+ * Uses connection string URL from environment
  */
 export const pool = new Pool({
-  host: config.database.host,
-  port: config.database.port,
-  database: config.database.name,
-  user: config.database.user,
-  password: config.database.password,
-  max: 20, // Maximum number of clients in the pool
-  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-  connectionTimeoutMillis: 5000, // Return an error after 5 seconds if connection fails
+  connectionString: config.database.url,
+  ssl: {
+    rejectUnauthorized: false, // Required for Neon DB
+  },
+  max: 10, // Neon has connection limits, keep this reasonable
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
 });
 
 pool.on('error', (err) => {
@@ -28,7 +27,7 @@ export async function testConnection(): Promise<boolean> {
     const client = await pool.connect();
     await client.query('SELECT NOW()');
     client.release();
-    console.log('✅ Database connection established');
+    console.log('✅ Database connection established (Neon DB)');
     return true;
   } catch (error) {
     console.error('❌ Database connection failed:', error);
