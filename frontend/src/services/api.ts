@@ -1,6 +1,9 @@
 import { SendMessageRequest, SendMessageResponse, ApiError, ConversationHistoryResponse, Message } from '../types';
 
-const API_BASE_URL = '/chat';
+// Use environment variable for production, fallback to relative path for dev proxy
+const API_BASE = import.meta.env.VITE_API_URL || '';
+const API_BASE_URL = `${API_BASE}/chat`;
+const HEALTH_URL = `${API_BASE}/health`;
 
 export class ChatApiError extends Error {
   constructor(
@@ -89,7 +92,7 @@ export async function getConversationHistory(
 
 export async function checkHealth(): Promise<boolean> {
   try {
-    const response = await fetch('/health');
+    const response = await fetch(HEALTH_URL);
     return response.ok;
   } catch {
     return false;

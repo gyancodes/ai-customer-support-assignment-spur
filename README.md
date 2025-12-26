@@ -11,6 +11,7 @@ A production-quality AI-powered customer support chat application built with Rea
 - [LLM Integration](#llm-integration)
 - [API Reference](#api-reference)
 - [Trade-offs and Future Improvements](#trade-offs-and-future-improvements)
+- [Deployment](#deployment)
 
 ---
 
@@ -264,3 +265,72 @@ Health check endpoint.
 3. **Monitoring** - Add logging, metrics, and alerting for production
 
 ---
+
+## Deployment
+
+### Backend Deployment (Render)
+
+1. **Create Render Account**: Go to https://render.com and sign up
+
+2. **Create Web Service**:
+   - Click "New" → "Web Service"
+   - Connect your GitHub repository
+   - Set the root directory to `backend`
+
+3. **Configure Build Settings**:
+   - **Build Command**: `npm install && npm run build`
+   - **Start Command**: `npm start`
+   - **Runtime**: Node
+
+4. **Add Environment Variables** in Render Dashboard:
+   | Variable | Value |
+   |----------|-------|
+   | DATABASE_URL | Your Neon PostgreSQL connection string |
+   | GROQ_API_KEY | Your Groq API key |
+   | NODE_ENV | production |
+   | LLM_MODEL | llama-3.3-70b-versatile |
+   | LLM_MAX_TOKENS | 500 |
+   | LLM_TEMPERATURE | 0.7 |
+
+5. **Deploy**: Render will automatically build and deploy your backend
+
+6. **Copy the URL**: Note your Render URL (e.g., `https://your-app.onrender.com`)
+
+### Frontend Deployment (Vercel)
+
+1. **Create Vercel Account**: Go to https://vercel.com and sign up
+
+2. **Import Project**:
+   - Click "Add New" → "Project"
+   - Import your GitHub repository
+   - Set the root directory to `frontend`
+
+3. **Configure Build Settings** (auto-detected for Vite):
+   - **Framework Preset**: Vite
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+
+4. **Add Environment Variable**:
+   | Variable | Value |
+   |----------|-------|
+   | VITE_API_URL | Your Render backend URL (e.g., `https://your-app.onrender.com`) |
+
+5. **Deploy**: Vercel will build and deploy your frontend
+
+### Post-Deployment Checklist
+
+- [ ] Backend is running on Render (check `/health` endpoint)
+- [ ] Database migrations have been run
+- [ ] Frontend can communicate with backend (test chat functionality)
+- [ ] CORS is working correctly
+
+### Troubleshooting
+
+**CORS Errors**: The backend uses `cors()` middleware which allows all origins. For production, you may want to restrict this to your Vercel domain.
+
+**Database Connection Issues**: Ensure your Neon database allows connections from Render's IP addresses or has SSL enabled.
+
+**Build Failures**: Check that all dependencies are in `dependencies` (not `devDependencies`) for production builds.
+
+---
+

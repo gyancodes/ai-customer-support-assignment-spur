@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: ai-chat-backend
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: LLM_MODEL
+        value: llama-3.3-70b-versatile
+      - key: LLM_MAX_TOKENS
+        value: "500"
+      - key: LLM_TEMPERATURE
+        value: "0.7"
+      - key: MAX_MESSAGE_LENGTH
+        value: "2000"
+      - key: MAX_HISTORY_MESSAGES
+        value: "10"
